@@ -137,6 +137,80 @@ mutation{
 }
 ```
 
+### Request a return with a file or image attachment
+
+<Fragment src="../../../../includes/saas-only.md"/>
+
+If the return item defines a custom attribute with an input type of `file` or `image`, you can attach an uploaded file to the return. The file must be uploaded to Amazon S3 before you reference it in the mutation. See the [`initiateUpload` mutation](../../uploads/mutations/initiate-upload.md) and [`finishUpload` mutation](../../uploads/mutations/finish-upload.md) for more information about uploading files, using the `RMA_ATTRIBUTE_FILE` or `RMA_ATTRIBUTE_IMAGE` media resource type.
+
+Bind the key returned by `finishUpload` to the return item's attribute through the `entered_custom_attributes` input. The response returns the presigned GET `url` for the uploaded file.
+
+**Request:**
+
+```graphql
+mutation {
+  requestReturn(input: {
+    order_uid: "NQ=="
+    contact_email: "test1@example.com"
+    comment_text: "The item arrived damaged. See the attached photo."
+    items: {
+      order_item_uid: "MTE="
+      quantity_to_return: 1
+      entered_custom_attributes: [
+        {
+          attribute_code: "return_image"
+          value: "damage_d4bb0cef2cac42c61b8d72f1.png"
+        }
+      ]
+    }
+  }) {
+    return {
+      uid
+      items {
+        uid
+        custom_attributesV2 {
+          code
+          ... on AttributeImage {
+            value
+            url
+          }
+          ... on AttributeFile {
+            value
+            url
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "data": {
+    "requestReturn": {
+      "return": {
+        "uid": "Mw==",
+        "items": [
+          {
+            "uid": "Mw==",
+            "custom_attributesV2": [
+              {
+                "code": "return_image",
+                "value": "damage_d4bb0cef2cac42c61b8d72f1.png",
+                "url": "https://<bucket>.s3.<region>.amazonaws.com/<tenant-id>/media/rma_item/damage_d4bb0cef2cac42c61b8d72f1.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=<value>&X-Amz-Date=<value>&X-Amz-SignedHeaders=host&X-Amz-Expires=6600&X-Amz-Signature=<value>"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
 ### Returns attributes
 
 The `Returns` object contains an array of `Return` objects and pagination information.

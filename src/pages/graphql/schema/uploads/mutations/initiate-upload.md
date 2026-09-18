@@ -2,7 +2,7 @@
 title: initiateUpload mutation
 description: The initiateUpload mutation starts the file upload process by generating a presigned URL for uploading a file to an Amazon S3 bucket. This mutation require...
 keywords:
-  - REST
+  - GraphQL
   - Integration
 ---
 
@@ -17,6 +17,8 @@ The `initiateUpload` mutation starts the file upload process by generating a pre
 * `CUSTOMER_ATTRIBUTE_FILE`
 * `CUSTOMER_ATTRIBUTE_IMAGE`
 * `NEGOTIABLE_QUOTE_ATTACHMENT`
+* `RMA_ATTRIBUTE_FILE`
+* `RMA_ATTRIBUTE_IMAGE`
 
 When you call this mutation, Commerce uses the AWS SDK to create a presigned URL that allows the client to upload the file directly to a temporary location in the S3 bucket. The presigned URL is valid for a limited time, specified by the `expires_at` field in the response.
 
@@ -74,10 +76,10 @@ The `$input` variable contains:
 ```json
 {
   "data": {
-    "initiateUploadOutput": {
-        "upload_url": "https://<bucket>.s3.<region>.amazonaws.com/<temp-location>?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=<value>...",
-        "key": "customer/attribute/<hashed-key>",
-        "expires_at": "2024-09-30T12:34:56Z"
+    "initiateUpload": {
+        "upload_url": "https://<bucket>.s3.<region>.amazonaws.com/<tenant-id>/example_106d42b2ee34de81db31d958.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=<value>...",
+        "key": "example_106d42b2ee34de81db31d958.png",
+        "expires_at": "1789433073"
     }
   }
 }
@@ -111,6 +113,39 @@ mutation {
       "upload_url": "http://s3mock:9000/bucket1-presigned/tenant1/test-document1_32cb1fe50dab390be841461e.txt?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIOSFODNN7EXAMPLE%2F20250909%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20250909T160343Z&X-Amz-SignedHeaders=host&X-Amz-Expires=6600&X-Amz-Signature=5bc33cbdb2c93680a64dd9ef49d62ef34250faaafae1c6b0c17ac493f65b112d",
       "key": "test-document1_32cb1fe50dab390be841461e.txt",
       "expires_at": "1757440423"
+    }
+  }
+}
+```
+
+### Initiate an upload for an RMA (return) item image
+
+The following mutation initiates an upload for an image named `damage.png` to attach to a return item.
+
+**Request:**
+
+```graphql
+mutation {
+  initiateUpload(input: {
+    key: "damage.png",
+    media_resource_type: RMA_ATTRIBUTE_IMAGE
+  }) {
+    upload_url
+    key
+    expires_at
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "data": {
+    "initiateUpload": {
+      "upload_url": "https://<bucket>.s3.<region>.amazonaws.com/<tenant-id>/damage_d4bb0cef2cac42c61b8d72f1.png?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=<value>&X-Amz-Date=<value>&X-Amz-SignedHeaders=host&X-Amz-Expires=6600&X-Amz-Signature=<value>",
+      "key": "damage_d4bb0cef2cac42c61b8d72f1.png",
+      "expires_at": "1789433073"
     }
   }
 }
